@@ -1,0 +1,20 @@
+# 環境変数ファイル（APIキーが含まれるため）
+.env
+
+# Python関連
+__pycache__/
+*.pyc
+
+# IDE設定
+.vscode/
+.idea/
+
+# OS関連
+.DS_Store
+Thumbs.db
+
+# 一時ファイル
+*.log
+temp.wav
+response.wav
+temp_voice.wav

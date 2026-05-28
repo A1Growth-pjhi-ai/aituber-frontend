@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html class="dark" lang="ja">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>AITuber Live System - VTube Studio</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#00f0ff",
+                        "on-primary-container": "#006970",
+                        "secondary": "#ebb2ff",
+                        "on-surface": "#e3e2e7",
+                        "surface-container": "#1f1f24",
+                        "background": "#121317",
+                        "surface-dim": "#121317",
+                        "on-surface-variant": "#b9cacb",
+                        "outline": "#849495",
+                        "primary": "#dbfcff",
+                        "error": "#ffb4ab",
+                        "tertiary-fixed-dim": "#ffb86f"
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-background text-on-surface font-['Hanken_Grotesk'] overflow-hidden h-screen w-screen">
+    <!-- Global Background -->
+    <div class="fixed inset-0 z-0">
+        <img alt="Background" class="w-full h-full object-cover" src="/背景.png"/>
+        <div class="absolute inset-0 bg-black/30"></div>
+    </div>
+
+    <!-- Top AppBar -->
+    <header class="fixed top-0 left-0 w-full h-16 z-50 flex justify-between items-center px-10 bg-black/40 backdrop-blur-md border-b border-primary-container/20">
+        <div class="flex items-center gap-6">
+            <h1 class="font-['Space_Grotesk'] text-2xl font-semibold text-primary-container drop-shadow-[0_0_10px_rgba(0,240,255,0.8)]">AITUBER.VTUBE_STUDIO</h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 px-3 py-1 bg-primary-container/10 border border-primary-container/20 rounded-full">
+                <div id="vtubeStatus" class="w-2 h-2 rounded-full bg-outline"></div>
+                <span id="vtubeStatusText" class="font-['JetBrains_Mono'] text-xs text-on-surface-variant uppercase">接続待機中</span>
+            </div>
+            <div class="flex items-center gap-2 px-3 py-1 bg-primary-container/10 border border-primary-container/20 rounded-full">
+                <div id="liveIndicator" class="w-2 h-2 rounded-full bg-error animate-pulse"></div>
+                <span id="liveStatus" class="font-['JetBrains_Mono'] text-xs text-primary-container uppercase">LIVE</span>
+            </div>
+            <button 
+                id="toggleStreamBtn"
+                class="px-4 py-1 bg-error/20 border border-error/40 rounded text-error hover:bg-error/30 transition-all font-['JetBrains_Mono'] text-xs uppercase"
+            >
+                配信停止
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Canvas -->
+    <main class="fixed top-16 left-0 right-0 bottom-32 z-10 flex px-6 py-6 gap-6">
+        <!-- Left: Glass Chat Box -->
+        <section class="w-1/3 h-full flex flex-col gap-4">
+            <div class="glass-panel rounded-xl flex flex-col p-4 shadow-xl border-l-2 border-primary-container" style="height: 100%; max-height: 100%;">
+                <div class="flex items-center justify-between mb-4 pb-2 border-b border-primary-container/20">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary-container">message</span>
+                        <span class="font-['JetBrains_Mono'] text-xs uppercase tracking-widest text-primary-container">ライブチャット</span>
+                    </div>
+                </div>
+                
+                <!-- Messages List -->
+                <div id="chatMessages" class="flex-grow overflow-y-auto space-y-3 pr-2 scrollbar-hide">
+                    <div class="space-y-1">
+                        <p class="text-[10px] font-['JetBrains_Mono'] text-primary-container/60">システム起動</p>
+                        <p class="font-['JetBrains_Mono'] text-sm text-on-surface-variant">VTube Studioに接続してください...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right: VTube Studio Connection Info -->
+        <section class="flex-grow flex items-center justify-center p-8">
+            <div class="glass-panel rounded-xl p-8 max-w-2xl border-2 border-primary-container/40">
+                <div class="text-center space-y-6">
+                    <div class="flex items-center justify-center gap-3">
+                        <span class="material-symbols-outlined text-primary-container text-5xl">smart_toy</span>
+                        <h2 class="font-['Space_Grotesk'] text-3xl font-semibold text-primary-container">VTube Studio連携</h2>
+                    </div>
+                    
+                    <div class="space-y-4 text-left">
+                        <div class="bg-surface-container/50 rounded-lg p-4 border border-primary-container/20">
+                            <h3 class="font-['JetBrains_Mono'] text-sm text-primary-container mb-2">📋 セットアップ手順</h3>
+                            <ol class="space-y-2 text-sm text-on-surface-variant font-['JetBrains_Mono']">
+                                <li>1. VTube Studioを起動してモデルを読み込む</li>
+                                <li>2. VTube Studio設定 → プラグイン → APIを有効化</li>
+                                <li>3. ポート番号を確認（デフォルト: 8001）</li>
+                                <li>4. このページで「接続」ボタンをクリック</li>
+                                <li>5. VTube Studioで接続を許可</li>
+                            </ol>
+                        </div>
+                        
+                        <div class="bg-surface-container/50 rounded-lg p-4 border border-secondary/20">
+                            <h3 class="font-['JetBrains_Mono'] text-sm text-secondary mb-2">⚙️ 接続設定</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-3">
+                                    <label class="text-xs text-on-surface-variant w-20">ホスト:</label>
+                                    <input 
+                                        type="text" 
+                                        id="vtubeHost" 
+                                        value="ws://localhost:8002"
+                                        class="flex-grow bg-surface-container border border-primary-container/30 rounded px-3 py-2 text-xs font-['JetBrains_Mono'] text-on-surface focus:outline-none focus:border-primary-container"
+                                    />
+                                </div>
+                                <button 
+                                    id="connectVTubeBtn"
+                                    class="w-full px-4 py-3 bg-primary-container/20 border border-primary-container/40 rounded text-primary-container hover:bg-primary-container/30 transition-all font-['JetBrains_Mono'] text-sm uppercase font-bold"
+                                >
+                                    VTube Studioに接続
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="connectionStatus" class="bg-surface-container/50 rounded-lg p-4 border border-outline/20 hidden">
+                            <h3 class="font-['JetBrains_Mono'] text-sm text-on-surface-variant mb-2">📊 接続状態</h3>
+                            <div class="space-y-1 text-xs font-['JetBrains_Mono'] text-on-surface-variant">
+                                <p>モデル: <span id="currentModel" class="text-primary-container">未接続</span></p>
+                                <p>表情: <span id="currentExpression" class="text-primary-container">-</span></p>
+                                <p>パラメータ数: <span id="paramCount" class="text-primary-container">0</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Bottom Input Area -->
+    <footer class="fixed bottom-0 left-0 w-full z-50 bg-surface-dim/90 backdrop-blur-lg border-t border-primary-container/10">
+        <!-- Input Section -->
+        <div class="px-10 py-4">
+            <div class="flex items-start gap-4">
+                <!-- Username Input -->
+                <input 
+                    type="text" 
+                    id="usernameInput" 
+                    placeholder="ユーザー名"
+                    class="w-32 bg-surface-container/50 border border-primary-container/30 rounded px-3 py-2 text-xs font-['JetBrains_Mono'] text-on-surface focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container"
+                />
+                
+                <!-- Message Input Form -->
+                <form id="chatForm" class="flex-grow flex items-center gap-2">
+                    <input 
+                        type="text" 
+                        id="chatInput" 
+                        placeholder="メッセージを入力..."
+                        class="flex-grow bg-surface-container/50 border border-primary-container/30 rounded px-4 py-2 text-sm font-['JetBrains_Mono'] text-on-surface focus:outline-none focus:border-primary-container focus:ring-1 focus:ring-primary-container"
+                    />
+                    <button 
+                        type="submit"
+                        class="px-6 py-2 bg-primary-container/20 border border-primary-container/40 rounded text-primary-container hover:bg-primary-container/30 transition-all font-['JetBrains_Mono'] text-sm uppercase"
+                    >
+                        送信
+                    </button>
+                </form>
+                
+                <!-- Super Chat Button -->
+                <button 
+                    id="superChatBtn"
+                    class="px-6 py-2 bg-secondary/20 border border-secondary/40 rounded text-secondary hover:bg-secondary/30 transition-all font-['JetBrains_Mono'] text-sm uppercase flex items-center gap-2 whitespace-nowrap"
+                >
+                    <span class="material-symbols-outlined text-lg">paid</span>
+                    スパチャ
+                </button>
+            </div>
+            
+            <!-- Status Text -->
+            <div id="statusText" class="mt-2 text-xs font-['JetBrains_Mono'] text-on-surface-variant italic"></div>
+        </div>
+        
+        <!-- Info Bar -->
+        <div class="px-10 py-2 bg-surface-dim/60 border-t border-primary-container/5 flex justify-between items-center">
+            <div class="flex items-center gap-8">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary-container text-sm">psychology</span>
+                    <span class="font-['JetBrains_Mono'] text-[10px] text-on-surface-variant">AI: <span id="aiModel">Ollama (gemma2:2b)</span></span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-secondary text-sm">record_voice_over</span>
+                    <span class="font-['JetBrains_Mono'] text-[10px] text-on-surface-variant">Voice: <span id="voiceModel">にせ (Aivis Speech)</span></span>
+                </div>
+                <!-- BGM Volume Control -->
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-tertiary-fixed-dim text-sm">music_note</span>
+                    <span class="font-['JetBrains_Mono'] text-[10px] text-on-surface-variant">BGM:</span>
+                    <input 
+                        type="range" 
+                        id="bgmVolumeSlider" 
+                        min="0" 
+                        max="100" 
+                        value="0" 
+                        class="w-20 h-1 bg-surface-container rounded-lg appearance-none cursor-pointer accent-tertiary-fixed-dim"
+                    />
+                    <span id="bgmVolumeText" class="font-['JetBrains_Mono'] text-[10px] text-on-surface-variant w-8">30%</span>
+                </div>
+                <!-- Audio Output Device Selection -->
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary-container text-sm">speaker</span>
+                    <span class="font-['JetBrains_Mono'] text-[10px] text-on-surface-variant">出力:</span>
+                    <select 
+                        id="audioOutputSelect" 
+                        class="bg-surface-container border border-primary-container/30 rounded px-2 py-1 text-[10px] font-['JetBrains_Mono'] text-on-surface focus:outline-none focus:border-primary-container"
+                    >
+                        <option value="">デフォルト</option>
+                    </select>
+                </div>
+            </div>
+            <div class="font-['JetBrains_Mono'] text-[10px] text-on-surface-variant">
+                <span id="currentTime"></span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Super Chat Modal -->
+    <div id="superChatModal" class="fixed inset-0 z-[200] hidden items-center justify-center bg-black/70 backdrop-blur-sm">
+        <div class="glass-panel rounded-xl p-6 w-96 border-2 border-secondary/40">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="font-['Space_Grotesk'] text-xl font-semibold text-secondary flex items-center gap-2">
+                    <span class="material-symbols-outlined">paid</span>
+                    スーパーチャット
+                </h2>
+                <button id="closeSuperChatModal" class="text-on-surface-variant hover:text-secondary transition-colors">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <!-- Amount Selection -->
+                <div>
+                    <label class="block text-xs font-['JetBrains_Mono'] text-on-surface-variant mb-2">金額を選択</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button class="superchat-amount px-4 py-2 bg-surface-container border border-secondary/30 rounded text-secondary hover:bg-secondary/20 transition-all font-['JetBrains_Mono'] text-sm" data-amount="100">¥100</button>
+                        <button class="superchat-amount px-4 py-2 bg-surface-container border border-secondary/30 rounded text-secondary hover:bg-secondary/20 transition-all font-['JetBrains_Mono'] text-sm" data-amount="500">¥500</button>
+                        <button class="superchat-amount px-4 py-2 bg-surface-container border border-secondary/30 rounded text-secondary hover:bg-secondary/20 transition-all font-['JetBrains_Mono'] text-sm" data-amount="1000">¥1,000</button>
+                        <button class="superchat-amount px-4 py-2 bg-surface-container border border-secondary/30 rounded text-secondary hover:bg-secondary/20 transition-all font-['JetBrains_Mono'] text-sm" data-amount="2000">¥2,000</button>
+                        <button class="superchat-amount px-4 py-2 bg-surface-container border border-secondary/30 rounded text-secondary hover:bg-secondary/20 transition-all font-['JetBrains_Mono'] text-sm" data-amount="5000">¥5,000</button>
+                        <button class="superchat-amount px-4 py-2 bg-surface-container border border-secondary/30 rounded text-secondary hover:bg-secondary/20 transition-all font-['JetBrains_Mono'] text-sm" data-amount="10000">¥10,000</button>
+                    </div>
+                </div>
+                
+                <!-- Message Input -->
+                <div>
+                    <label class="block text-xs font-['JetBrains_Mono'] text-on-surface-variant mb-2">メッセージ</label>
+                    <textarea 
+                        id="superChatMessage" 
+                        rows="3" 
+                        placeholder="メッセージを入力..."
+                        class="w-full bg-surface-container/50 border border-secondary/30 rounded px-3 py-2 text-sm font-['JetBrains_Mono'] text-on-surface focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary resize-none"
+                    ></textarea>
+                </div>
+                
+                <!-- Send Button -->
+                <button 
+                    id="sendSuperChat"
+                    class="w-full px-4 py-3 bg-secondary/30 border border-secondary/60 rounded text-secondary hover:bg-secondary/40 transition-all font-['JetBrains_Mono'] text-sm uppercase font-bold"
+                >
+                    スーパーチャットを送信
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Modules -->
+    <script type="module">
+        // デバッグ用：エラーをキャッチ
+        window.addEventListener('error', (e) => {
+            console.error('グローバルエラー:', e.error);
+            alert('エラーが発生しました: ' + e.error.message);
+        });
+        
+        // モジュールのインポートエラーをキャッチ
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Promise rejection:', e.reason);
+            alert('モジュール読み込みエラー: ' + e.reason);
+        });
+    </script>
+    <script type="module" src="js/main_vtube.js"></script>
+</body>
+</html>
